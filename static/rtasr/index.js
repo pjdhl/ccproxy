@@ -274,7 +274,10 @@ class IatTaste {
         type: "POST",
         url: "/cc/zoomapi",
         data: JSON.stringify({                  
-          zoomapi: $("#txt_zoomapi").val()
+          zoomapi: $("#txt_zoomapi").val(),
+          ots_appid: $("#txt_ots_appid").val(),
+          ots_appkey: $("#txt_ots_appkey").val(),
+          ots_secret: $("#txt_ots_secret").val()  
         }),
         contentType: "application/json; charset=utf-8"
       })
