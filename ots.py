@@ -5,18 +5,19 @@ import base64
 import hmac
 import json
 
+
 class OTSClient(object):
-    def __init__(self,host):
+    def __init__(self, host):
         self.APPID = ""
-        self.APIKey= ""
+        self.APIKey = ""
         self.Secret = ""
-        
+
         # 以下为POST请求
         self.Host = host
         self.RequestUri = "/v2/ots"
         # 设置url
         # print(host)
-        self.url="https://"+host+self.RequestUri
+        self.url = "https://" + host + self.RequestUri
         self.HttpMethod = "POST"
         self.Algorithm = "hmac-sha256"
         self.HttpProto = "HTTP/1.1"
@@ -26,10 +27,10 @@ class OTSClient(object):
         self.Date = self.httpdate(curTime_utc)
         # 设置业务参数
         # 语种列表参数值请参照接口文档：https://www.xfyun.cn/doc/nlp/niutrans/API.html
-        self.BusinessArgs={
-                "from": "cn",
-                "to": "en",
-            }
+        self.BusinessArgs = {
+            "from": "cn",
+            "to": "en",
+        }
 
     def hashlib_256(self, res):
         m = hashlib.sha256(bytes(res.encode(encoding='utf-8'))).digest()
@@ -65,13 +66,13 @@ class OTSClient(object):
 
     def init_header(self, data):
         digest = self.hashlib_256(data)
-        #print(digest)
+        # print(digest)
         sign = self.generateSignature(digest)
         authHeader = 'api_key="%s", algorithm="%s", ' \
                      'headers="host date request-line digest", ' \
                      'signature="%s"' \
                      % (self.APIKey, self.Algorithm, sign)
-        #print(authHeader)
+        # print(authHeader)
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -93,7 +94,7 @@ class OTSClient(object):
             }
         }
         body = json.dumps(postdata)
-        #print(body)
+        # print(body)
         return body
 
     def call_url(self):
@@ -101,13 +102,13 @@ class OTSClient(object):
             print('Appid 或APIKey 或APISecret 为空！请打开demo代码，填写相关信息。')
         else:
             code = 0
-            body=self.get_body()
-            headers=self.init_header(body)
-            #print(self.url)
-            response = requests.post(self.url, data=body, headers=headers,timeout=8)
+            body = self.get_body()
+            headers = self.init_header(body)
+            # print(self.url)
+            response = requests.post(self.url, data=body, headers=headers, timeout=8)
             status_code = response.status_code
-            #print(response.content)
-            if status_code!=200:
+            # print(response.content)
+            if status_code != 200:
                 # 鉴权失败
                 print("Http请求失败，状态码：" + str(status_code) + "，错误信息：" + response.text)
                 print("请根据错误信息检查代码，接口文档：https://www.xfyun.cn/doc/nlp/niutrans/API.html")
@@ -117,7 +118,6 @@ class OTSClient(object):
                 print(respData)
                 # 以下仅用于调试
                 code = str(respData["code"])
-                if code!='0':
+                if code != '0':
                     print("请前往https://www.xfyun.cn/document/error-code?code=" + code + "查询解决办法")
                 return respData
-

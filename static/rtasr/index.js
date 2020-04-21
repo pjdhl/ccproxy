@@ -268,12 +268,13 @@ class IatTaste {
   }
 
   init () {
-    let self = this
+    let self = this;
     $('#btn_zoomapi').click(function () {
+      console.log('保存设置信息')
       $.ajax({
         type: "POST",
         url: "/cc/zoomapi",
-        data: JSON.stringify({                  
+        data: JSON.stringify({
           zoomapi: $("#txt_zoomapi").val(),
           ots_appid: $("#txt_ots_appid").val(),
           ots_appkey: $("#txt_ots_appkey").val(),
@@ -281,19 +282,19 @@ class IatTaste {
         }),
         contentType: "application/json; charset=utf-8"
       })
-    })
+    });
     //开始
     $('#taste_button').click(function () {
       self.appId = $("#txt_appid").val()
       self.apiKey = $("#txt_appkey").val()
-      console.log(self.appId)
-      console.log(self.apiKey)
+      console.log('appId: ' ,self.appId)
+      console.log('appKey: ' , self.apiKey)
       if (navigator.getUserMedia && AudioContext && recorderWorker) {
         self.start()
       } else {
         alert(notSupportTip)
       }
-    })
+    });
     //结束
     $('.start-button').click(function () {
       if ($(this).text() === self.text.start && !$(this).prop('disabled')) {
@@ -319,6 +320,10 @@ class IatTaste {
       }
     })
   }
+
+  //todo 添加消息服务队列
+  //     将获取的转写后的中文data发送到mq中
+  //     添加一个http接口
   setResult (data) {
     let rtasrResult = []
     var currentText = $('#result_output').html()

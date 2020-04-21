@@ -1,12 +1,13 @@
-from flask import request,Flask
-from  requests_html import HTMLSession
+from flask import request, Flask
+from requests_html import HTMLSession
 from ots import OTSClient
 
-app = Flask(__name__,static_url_path='')
+app = Flask(__name__, static_url_path='')
 session = HTMLSession()
-# args = {"query":"","counter":1,"lang":"zh-CNS"}
-args = {"query":"","counter":1,"lang":"en-US"}
+# args = {"query": "", "counter": 1, "lang": "zh-CNS"}
+args = {"query": "", "counter": 1, "lang": "en-US"}
 ots_client = OTSClient("ntrans.xfyun.cn")
+
 
 @app.route('/cc/zoomapi', methods=['POST'])
 def cc_zoom():
@@ -17,23 +18,24 @@ def cc_zoom():
     ots_client.Secret = params["ots_secret"]
     return "ok"
 
+
 @app.route('/cc/xunfei', methods=['POST'])
 def cc_xunfei():
+    # data从消息服务mq中获取
     data = request.get_json()
-    if (len(data["data"])> 3):
+    if len(data["data"]) > 3:
         ots_client.Text = data["data"]
         ret = ots_client.call_url()
         if ret and "data" in ret and "result" in ret["data"]:
             cc = ret["data"]["result"]["trans_result"]["dst"]
             args["counter"] = args["counter"] + 1
-            url = "{}&seq={}&lang={}".format(args["query"],args["counter"],args["lang"])
+            url = "{}&seq={}&lang={}".format(args["query"], args["counter"], args["lang"])
             try:
-                response = session.post(url = url, data=cc.encode(), headers={'Content-Type':'text/plain'})
+                response = session.post(url=url, data=cc.encode(), headers={'Content-Type': 'text/plain'})
                 print(response.content)
             except Exception as err:
                 print(err)
     return "ok"
-
 
 
 if __name__ == '__main__':
