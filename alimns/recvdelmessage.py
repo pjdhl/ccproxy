@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#coding=utf8
+# coding=utf8
 
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 import time
-from sample_common import MNSSampleCommon
+from alimns.mnsQueue import MNSSampleCommon
 from mns.account import Account
 from mns.queue import *
 
