@@ -221,7 +221,8 @@ class IatTaste {
         alert('WebSocket连接失败')
       },
       onMessage: (message) =>{
-        this.setResult(JSON.parse(message))
+        this.sendMessageToMns(JSON.parse(message))
+        this.setResult()
       },
       onStart: () => {
         $('hr').addClass('hr')
@@ -254,6 +255,12 @@ class IatTaste {
   stop () {
     $('hr').removeClass('hr')
     this.iatRecorder.stop()
+    $.ajax({
+      type: "POST",
+      url: "/cc/mns/stop",
+      data: '',
+      contentType: "application/json; charset=utf-8"
+    })
   }
 
   reset () {
@@ -321,43 +328,50 @@ class IatTaste {
     })
   }
 
-  //todo 添加消息服务队列
-  //     将获取的转写后的中文data发送到mq中
-  //     添加一个http接口
-  setResult (data) {
-    let rtasrResult = []
-    var currentText = $('#result_output').html()
-    rtasrResult[data.seg_id] = data
-    rtasrResult.forEach(i => {
-      let str = "实时转写"
-      if(i.cn.st.type == 0){
-        str = ""
-        i.cn.st.rt.forEach(j => {
-          j.ws.forEach(k => {
-            k.cw.forEach(l => {
-              str += l.w
+  sendMessageToMns (data) {
+      let rtasrResult = []
+      var currentText = $('#result_output').html()
+      rtasrResult[data.seg_id] = data
+      rtasrResult.forEach(i => {
+        let str = "实时转写"
+        if(i.cn.st.type == 0){
+          str = ""
+          i.cn.st.rt.forEach(j => {
+            j.ws.forEach(k => {
+              k.cw.forEach(l => {
+                str += l.w
+              })
             })
           })
-        })
-        $.ajax({
-          type: "POST",
-          url: "/cc/xunfei",
-          data: JSON.stringify({                  
-            data: str
-          }),
-          contentType: "application/json; charset=utf-8"
-        })
+          $.ajax({
+            type: "POST",
+            url: "/cc/mns/send",
+            data: JSON.stringify({
+              data: str
+            }),
+            contentType: "application/json; charset=utf-8"
+          })
 
-        if (currentText.length == 0) {
-          $('#result_output').html(str)
-        } else {
-          $('#result_output').html(currentText + "<br>" +str)
+          if (currentText.length == 0) {
+            $('#result_output').html(str)
+          } else {
+            $('#result_output').html(currentText + "<br>" +str)
+          }
+          var ele = document.getElementById('result_output');
+          ele.scrollTop = ele.scrollHeight;
         }
-        var ele = document.getElementById('result_output');
-        ele.scrollTop = ele.scrollHeight;
-      }
+      })
+  }
+
+  setResult() {
+    console.log('执行最终setResult方法')
+    $.ajax({
+      type: "POST",
+      url: "/cc/xunfei"
     })
   }
+
+
 
   counterDown () {
     /*//计时5分钟
