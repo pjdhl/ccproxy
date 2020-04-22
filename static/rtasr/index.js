@@ -222,7 +222,6 @@ class IatTaste {
       },
       onMessage: (message) =>{
         this.sendMessageToMns(JSON.parse(message))
-        this.setResult()
       },
       onStart: () => {
         $('hr').addClass('hr')
@@ -234,6 +233,7 @@ class IatTaste {
         $('.time-box').addClass('flex-display-1')
         $('.dialect').text(dialect).css('display', 'inline-block')
         this.counterDown($('.used-time'))
+
       }
     })
     this.iatRecorder = iatRecorder
@@ -250,6 +250,12 @@ class IatTaste {
 
   start () {
     this.iatRecorder.start(this.appId,this.apiKey)
+    $.ajax({
+      type: "POST",
+      url: "/cc/mns/start",
+      data: '',
+      contentType: "application/json; charset=utf-8"
+    })
   }
 
   stop () {
@@ -343,15 +349,16 @@ class IatTaste {
               })
             })
           })
-          $.ajax({
-            type: "POST",
-            url: "/cc/mns/send",
-            data: JSON.stringify({
-              data: str
-            }),
-            contentType: "application/json; charset=utf-8"
-          })
-
+          if (str.trim().length !== 0) {
+            $.ajax({
+              type: "POST",
+              url: "/cc/xunfei",
+              data: JSON.stringify({
+                data: str
+              }),
+              contentType: "application/json; charset=utf-8"
+            });
+          }
           if (currentText.length == 0) {
             $('#result_output').html(str)
           } else {
@@ -362,16 +369,6 @@ class IatTaste {
         }
       })
   }
-
-  setResult() {
-    console.log('执行最终setResult方法')
-    $.ajax({
-      type: "POST",
-      url: "/cc/xunfei"
-    })
-  }
-
-
 
   counterDown () {
     /*//计时5分钟

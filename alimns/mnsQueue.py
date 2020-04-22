@@ -71,5 +71,6 @@ class MNSQueue:
             try:
                 self.my_queue.delete_message(recv_msg.receipt_handle)
                 print("Delete Message Succeed!  ReceiptHandle:%s" % recv_msg.receipt_handle)
+                return str(recv_msg.message_body, encoding="utf-8")
             except Exception as e:
                 print("Delete Message Fail! Exception:%s\n" % e)

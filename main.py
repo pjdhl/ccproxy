@@ -9,8 +9,6 @@ session = HTMLSession()
 args = {"query": "", "counter": 1, "lang": "en-US"}
 ots_client = OTSClient("ntrans.xfyun.cn")
 mns_queue = MNSQueue()
-mns_queue.create_queue()
-
 
 @app.route('/cc/zoomapi', methods=['POST'])
 def cc_zoom():
@@ -25,8 +23,10 @@ def cc_zoom():
 @app.route('/cc/xunfei', methods=['POST'])
 def cc_xunfei():
     # data从消息服务mq中获取
+    message = request.get_json()['data']
+    mns_queue.send_message(message)
     data = mns_queue.recvdel_message()
-    print("从MQ接收到的数据：" + data)
+    print(data)
     if len(data) > 3:
         ots_client.Text = data
         ret = ots_client.call_url()
@@ -42,13 +42,10 @@ def cc_xunfei():
     return "ok"
 
 
-@app.route('/cc/mns/send', methods=['POST'])
-def send_message():
-    message = request.get_json()['data']
-    if message:
-        mns_queue.send_message(message)
-        return "ok"
-    return "error", 400
+@app.route('/cc/mns/start', methods=['POST'])
+def create_queue():
+    mns_queue.create_queue()
+    return "ok"
 
 
 @app.route('/cc/mns/stop', methods=['POST'])
