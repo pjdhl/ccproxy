@@ -10,6 +10,7 @@ args = {"query": "", "counter": 1, "lang": "en-US"}
 ots_client = OTSClient("ntrans.xfyun.cn")
 mns_queue = MNSQueue()
 
+
 @app.route('/cc/zoomapi', methods=['POST'])
 def cc_zoom():
     params = request.get_json()

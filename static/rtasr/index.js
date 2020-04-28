@@ -43,11 +43,10 @@ class IatRecorder {
       if (!this.recorder) {
         var context = new AudioContext()
         this.context = context
-        this.recorder =context.createScriptProcessor(0, 1, 1)
+        this.recorder =context.createScriptProcessor(4096, 1, 1)
 
         var getMediaSuccess = (stream) => {
-          var mediaStream = this.context.createMediaStreamSource(stream)
-          this.mediaStream = mediaStream
+          this.mediaStream = this.context.createMediaStreamSource(stream)
           this.recorder.onaudioprocess = (e) => {
             this.sendData(e.inputBuffer.getChannelData(0))
           }
@@ -112,8 +111,9 @@ class IatRecorder {
     var signa = hex_md5(appId + ts)//hex_md5(encodeURIComponent(appId + ts));//EncryptUtil.HmacSHA1Encrypt(EncryptUtil.MD5(appId + ts), secretKey);
     var signatureSha = CryptoJSNew.HmacSHA1(signa, secretKey)
     var signature = CryptoJS.enc.Base64.stringify(signatureSha)
+    var punc = 0
     signature = encodeURIComponent(signature)
-    return "?appid=" + appId + "&ts=" + ts + "&signa=" +signature;
+    return "?appid=" + appId + "&ts=" + ts + "&signa=" +signature + "&punc=" + punc;
   }
   connectWebsocket () {
     var url = 'wss://rtasr.xfyun.cn/v1/ws'
@@ -129,8 +129,7 @@ class IatRecorder {
       return null
     }
     this.ws.onopen = (e) => {
-      this.mediaStream.connect(this.recorder)
-      this.recorder.connect(this.context.destination)
+      this.initAudioConfig();
       setTimeout(() => {
         this.wsOpened(e)
       }, 500)
@@ -152,12 +151,31 @@ class IatRecorder {
       this.config.onClose && this.config.onClose(e)
     }
   }
-  
+
+  initAudioConfig() {
+    const compressor = this.context.createDynamicsCompressor();
+    compressor.threshold.value = -50;
+    compressor.knee.value = 40;
+    compressor.ratio.value = 12;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.25;
+    const filter = this.context.createBiquadFilter();
+    filter.Q.value = 8.30;
+    filter.frequency.value = 350;
+    filter.gain.value = 4.0;
+    filter.type = 'bandpass';
+    filter.connect(compressor);
+    this.mediaStream.connect(filter)
+
+    this.mediaStream.connect(this.recorder)
+    this.recorder.connect(this.context.destination)
+  }
+
   wsOpened () {
     if (this.ws.readyState !== 1) {
       return
     }
-    var audioData = buffer.splice(0, 1280)
+    var audioData = buffer.splice(0, 2560)
     this.ws.send(new Int8Array(audioData))
     this.handlerInterval = setInterval(() => {
       // websocket未连接
@@ -173,7 +191,8 @@ class IatRecorder {
         }
         return false
       }
-      var audioData = buffer.splice(0, 1280)
+      let audioData = buffer.splice(0, 2560)
+      console.log(audioData.length)
       if(audioData.length > 0){
         this.ws.send(new Int8Array(audioData))
       }
@@ -195,7 +214,6 @@ class IatRecorder {
       console.log("出错了:",jsonData);
   }
   }
-  
 
   ArrayBufferToBase64 (buffer) {
     var binary = ''
@@ -221,7 +239,8 @@ class IatTaste {
         alert('WebSocket连接失败')
       },
       onMessage: (message) =>{
-        this.sendMessageToMns(JSON.parse(message))
+        console.log("开始发射字幕")
+        this.setResult(JSON.parse(message))
       },
       onStart: () => {
         $('hr').addClass('hr')
@@ -334,7 +353,7 @@ class IatTaste {
     })
   }
 
-  sendMessageToMns (data) {
+  setResult (data) {
       let rtasrResult = []
       var currentText = $('#result_output').html()
       rtasrResult[data.seg_id] = data
@@ -352,6 +371,7 @@ class IatTaste {
           if (str.trim().length !== 0) {
             $.ajax({
               type: "POST",
+              async: true,
               url: "/cc/xunfei",
               data: JSON.stringify({
                 data: str
